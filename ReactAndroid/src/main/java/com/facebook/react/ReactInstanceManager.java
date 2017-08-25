@@ -686,12 +686,6 @@ public class ReactInstanceManager {
 
   @ThreadConfined(UI)
   private void onReloadWithJSDebugger(JavaJSExecutor.Factory jsExecutorFactory) {
-    synchronized (mAttachedRootViews) {
-      for (ReactRootView reactRootView : mAttachedRootViews) {
-        reactRootView.removeAllViews();
-        reactRootView.setId(View.NO_ID);
-      }
-    }
     recreateReactContextInBackground(
         new ProxyJavaScriptExecutor.Factory(jsExecutorFactory),
         JSBundleLoader.createRemoteDebuggerBundleLoader(
@@ -701,12 +695,6 @@ public class ReactInstanceManager {
 
   @ThreadConfined(UI)
   private void onJSBundleLoadedFromServer() {
-    synchronized (mAttachedRootViews) {
-      for (ReactRootView reactRootView : mAttachedRootViews) {
-        reactRootView.removeAllViews();
-        reactRootView.setId(View.NO_ID);
-      }
-    }
     recreateReactContextInBackground(
         new JSCJavaScriptExecutor.Factory(mJSCConfig.getConfigMap()),
         JSBundleLoader.createCachedBundleFromNetworkLoader(
@@ -891,11 +879,14 @@ public class ReactInstanceManager {
     if (mLifecycleState == LifecycleState.RESUMED) {
       reactContext.onHostPause();
     }
+
     synchronized (mAttachedRootViews) {
       for (ReactRootView rootView : mAttachedRootViews) {
-        detachViewFromInstance(rootView, reactContext.getCatalystInstance());
+        reactRootView.removeAllViews();
+        reactRootView.setId(View.NO_ID);
       }
     }
+    
     reactContext.destroy();
     mDevSupportManager.onReactInstanceDestroyed(reactContext);
     mMemoryPressureRouter.removeMemoryPressureListener(reactContext.getCatalystInstance());
